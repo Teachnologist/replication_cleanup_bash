@@ -1,0 +1,27 @@
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+echo $DIR
+source "${DIR}/config.sh"
+echo "CONFIG SOURCE: ${DIR}/config.sh"
+echo $DBUSER1
+echo $DBUSER1PASSWORD
+
+mysql -u $DBUSER1 -p$DBUSER1PASSWORD -e "SHOW SLAVE STATUS\G;"
+mysql -u $DBUSER1 -p$DBUSER1PASSWORD -e "SHOW MASTER STATUS\G;"
+mysql -u $DBUSER1 -p$DBUSER1PASSWORD -e "SHOW BINARY LOGS;"
+mysql -u $DBUSER1 -p$DBUSER1PASSWORD -e "PURGE BINARY LOGS BEFORE NOW();"
+mysql -u $DBUSER1 -p$DBUSER1PASSWORD -e "SHOW BINARY LOGS;"
+
+if [ ! -z "${REMOTEHOST// }" ] && [ ! -z "${REMOTEUSER// }" ] && [ ! -z "${REMOTEUSERPASSWORD// }" ] ; then
+    echo 'REMOTE IS ON'
+echo $REMOTEHOST
+mysql -u$REMOTEUSER -p$REMOTEUSERPASSWORD -h "$REMOTEHOST" -e "SHOW BINARY LOGS;"
+mysql -u$REMOTEUSER -p$REMOTEUSERPASSWORD -h "$REMOTEHOST" -e "PURGE BINARY LOGS BEFORE NOW();"
+mysql -u$REMOTEUSER -p$REMOTEUSERPASSWORD -h "$REMOTEHOST" -e "FLUSH LOGS;"
+echo "Logs purged"
+mysql -u$REMOTEUSER -p$REMOTEUSERPASSWORD -h "$REMOTEHOST" -e "SHOW BINARY LOGS;"
+else
+   echo 'REMOTE IS OFF'
+fi
+
+echo "end of script"
+exit
